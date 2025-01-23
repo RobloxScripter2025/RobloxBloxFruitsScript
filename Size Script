@@ -1,0 +1,52 @@
+-- Script for Executing with an Executor (like Synapse X, Krnl, etc.)
+
+-- Ensure the script runs only once and injects into the game client
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Function to resize the player parts
+local function resizePlayer(factor)
+    -- Wait for the character to fully load
+    if not character:FindFirstChild("Humanoid") then return end
+    local humanoid = character:WaitForChild("Humanoid")
+
+    -- Loop through the parts and resize them
+    for _, part in ipairs(character:GetChildren()) do
+        if part:IsA("Part") or part:IsA("MeshPart") then
+            part.Size = part.Size * factor
+        end
+    end
+
+    -- Adjust humanoid properties if necessary
+    humanoid.HipWidth = humanoid.HipWidth * factor
+    humanoid.HipHeight = humanoid.HipHeight * factor
+    humanoid.BodyProportionScale = humanoid.BodyProportionScale * factor
+    humanoid.BodyTypeScale = humanoid.BodyTypeScale * factor
+    humanoid.HeadScale = humanoid.HeadScale * factor
+end
+
+-- Default size factor (1 is normal, 10 is large)
+local normalSize = 1
+local largeSize = 10
+
+-- Function to detect when the user presses the "L" or "U" keys
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end -- Ignore if the game already processed the input
+
+    -- If "L" key is pressed, resize to large
+    if input.KeyCode == Enum.KeyCode.L then
+        resizePlayer(largeSize)  -- Increase size
+    end
+
+    -- If "U" key is pressed, reset to normal
+    if input.KeyCode == Enum.KeyCode.U then
+        resizePlayer(normalSize)  -- Reset to normal size
+    end
+end)
+
+-- Listen for character respawn and apply the size again
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    resizePlayer(normalSize)  -- Reset size when respawned
+end)
